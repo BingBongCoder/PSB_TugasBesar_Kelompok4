@@ -19,7 +19,20 @@ end
 
 % Membuat Sinyal Domain Waktu
 figure(1);
-plot(t, x(:,1));
-title('Sinyal Domain Waktu Suara Kereta');
-xlabel('Waktu (t), Satuan Detik');
-ylabel('Amplitudo [x(t)]');
+if(KananKiriEqual)
+    plot(t, x(:,1));
+    title('Sinyal Domain Waktu Suara Kereta');
+    xlabel('Waktu (t), Satuan Detik');
+    ylabel('Amplitudo [x(t)]');
+else
+    subplot(2,1,1);
+    plot(t,x(:,1));
+    title('Sinyal Domain Waktu Suara Kereta Speaker Kiri');
+    xlabel('Waktu (t), Satuan Detik');
+    ylabel('Amplitudo [x(t)]');
+    subplot(2,1,2);
+    plot(t,x(:,1));
+    title('Sinyal Domain Waktu Suara Kereta Speaker Kanan');
+    xlabel('Waktu (t), Satuan Detik');
+    ylabel('Amplitudo [x(t)]');
+end
