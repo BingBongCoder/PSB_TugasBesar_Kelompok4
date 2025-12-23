@@ -3,21 +3,23 @@ clear;
 clc;
 close all;
 
-%% SOAL 1A
+%% SOAL 1a
 % Baca File Audio
 [x, Fs] = audioread('kereta.aac');
 n = length(x);
 t = (0:n-1) / Fs;
 
+% Memeriksa Apakah Audio Speaker Kiri Sama dengan Audio Speaker Kanan
+KananKiriEqual = isequal(x(:,1), x(:,2));
+if(KananKiriEqual)
+    disp("Audio speaker kanan dan kiri sama");
+else
+    disp("Audio speaker kanan dan kiri tidak sama");
+end
+
 % Membuat Sinyal Domain Waktu
 figure(1);
-subplot(2,1,1);
 plot(t, x(:,1));
-title('Sinyal Domain Waktu Suara Kereta Speaker Kiri');
-xlabel('Waktu (t), Satuan Detik');
-ylabel('Amplitudo [x(t)]');
-subplot(2,1,2);
-plot(t, x(:,2));
-title('Sinyal Domain Waktu Suara Kereta Speaker Kanan');
+title('Sinyal Domain Waktu Suara Kereta');
 xlabel('Waktu (t), Satuan Detik');
 ylabel('Amplitudo [x(t)]');
