@@ -36,3 +36,4 @@ else
     xlabel('Waktu (t), Satuan Detik');
     ylabel('Amplitudo [x(t)]');
 end
+
