@@ -1,0 +1,2490 @@
+% TUGAS BESAR PSB SOAL 1
+clear;
+clc;
+close all;
+
+%% SOAL 1a
+
+disp(" ");
+disp("SOAL 1a"); % judul buat di command window mudah dibaca
+
+% Baca File Audio
+[x, Fs] = audioread('kereta.aac');
+n = length(x);
+t = (0:n-1) / Fs;
+
+% Memeriksa Apakah Audio Speaker Kiri Sama dengan Audio Speaker Kanan
+KananKiriEqual = isequal(x(:,1), x(:,2));
+disp(" ");
+if(KananKiriEqual)
+    disp("Audio speaker kanan dan kiri sama");
+else
+    disp("Audio speaker kanan dan kiri tidak sama");
+end
+
+% Membuat Sinyal Domain Waktu
+figure('Color', 'w', 'Name', '1a. Analisis Domain Waktu');
+if(KananKiriEqual)
+    plot(t, x(:,1));
+    title('Sinyal Domain Waktu Suara Kereta');
+    xlabel('Waktu (t), Satuan Detik');
+    ylabel('Amplitudo [x(t)]');
+else
+    subplot(2,1,1);
+    plot(t,x(:,1));
+    title('Sinyal Domain Waktu Suara Kereta Speaker Kiri');
+    xlabel('Waktu (t), Satuan Detik');
+    ylabel('Amplitudo [x(t)]');
+    subplot(2,1,2);
+    plot(t,x(:,1));
+    title('Sinyal Domain Waktu Suara Kereta Speaker Kanan');
+    xlabel('Waktu (t), Satuan Detik');
+    ylabel('Amplitudo [x(t)]');
+end
+
+%% SOAL 1b
+
+disp(" ");
+disp("SOAL 1b");
+
+s = x(:,1); 
+
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x= 
+%                Analisis PSD Sinyal "teeet"
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=
+
+disp(" ");
+disp("Analisis PSD Sinyal teeet");
+
+durasi = 0.9169985714; 
+nfft = 65536; % untuk zero padding (2^16)
+
+% Deklarasi Window
+win_rectangular = rectwin(round(durasi*Fs) + 1);
+win_hamming = hamming(round(durasi*Fs) + 1);
+win_hanning = hann(round(durasi*Fs) + 1);
+
+t_starts = [1.60646, 3.43342, 5.26565, 7.08896, 8.91415, 10.7427, ...
+            12.5639, 14.3965, 16.2361, 18.0407, 19.8694, 21.6945, ...
+            23.525, 25.3521]; 
+
+% Analisis PSD dengan Rectangular Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" - Rectangular Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Rectangular Window
+subplot(3,3,2);
+plot((0:length(win_rectangular)-1)/Fs, win_rectangular, 'r', 'LineWidth', 1.5);
+title('Fungsi Rectangular Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    plot((0:length(seg_win_rectangular)-1)/Fs, seg_win_rectangular, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Rectangular Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hamming Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" - Hamming Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hamming Window
+subplot(3,3,2);
+plot((0:length(win_hamming)-1)/Fs, win_hamming, 'r', 'LineWidth', 1.5);
+title('Fungsi Hamming Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    plot((0:length(seg_win_hamming)-1)/Fs, seg_win_hamming, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hamming Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hanning Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" - Hanning Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hanning Window
+subplot(3,3,2);
+plot((0:length(win_hanning)-1)/Fs, win_hanning, 'r', 'LineWidth', 1.5);
+title('Fungsi Hanning Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    plot((0:length(seg_win_hanning)-1)/Fs, seg_win_hanning, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hanning Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x= 
+%              Analisis PSD Sinyal "tooot"
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=
+
+disp(" ");
+disp("Analisis PSD Sinyal tooot");
+
+durasi = 0.9094676; 
+nfft = 65536; % untuk zero padding (2^16)
+
+% Deklarasi Window
+win_rectangular = rectwin(round(durasi*Fs) + 1);
+win_hamming = hamming(round(durasi*Fs) + 1);
+win_hanning = hann(round(durasi*Fs) + 1);
+
+t_starts = [0.695306, 2.52227, 4.35088, 6.17624, 8.00308, 9.82995, ...
+            11.6568, 13.4838, 15.3159, 17.1375, 18.9644, 20.7913, ...
+            22.6182, 24.4451, 26.2721];
+
+% Analisis PSD dengan Rectangular Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tooot" - Rectangular Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Rectangular Window
+subplot(3,3,2);
+plot((0:length(win_rectangular)-1)/Fs, win_rectangular, 'r', 'LineWidth', 1.5);
+title('Fungsi Rectangular Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    plot((0:length(seg_win_rectangular)-1)/Fs, seg_win_rectangular, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Rectangular Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hamming Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tooot" - Hamming Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hamming Window
+subplot(3,3,2);
+plot((0:length(win_hamming)-1)/Fs, win_hamming, 'r', 'LineWidth', 1.5);
+title('Fungsi Hamming Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    plot((0:length(seg_win_hamming)-1)/Fs, seg_win_hamming, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hamming Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hanning Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tooot" - Hanning Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hanning Window
+subplot(3,3,2);
+plot((0:length(win_hanning)-1)/Fs, win_hanning, 'r', 'LineWidth', 1.5);
+title('Fungsi Hanning Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    plot((0:length(seg_win_hanning)-1)/Fs, seg_win_hanning, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hanning Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x= 
+%             Analisis PSD Sinyal "teeet" "tooot"
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=
+
+disp(" ");
+disp("Analisis PSD Sinyal teeet tooot");
+
+durasi = 1.826345714;
+nfft = 131072; % untuk zero padding (2^17)
+
+% Deklarasi Window
+win_rectangular = rectwin(round(durasi*Fs) + 1);
+win_hamming = hamming(round(durasi*Fs) + 1);
+win_hanning = hann(round(durasi*Fs) + 1);
+
+t_starts = [1.60646, 3.43342, 5.26565, 7.08896, 8.91415, 10.7427, ...
+            12.5639, 14.3965, 16.2361, 18.0407, 19.8694, 21.6945, ...
+            23.525, 25.3521];
+
+% Analisis PSD dengan Rectangular Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" "tooot" - Rectangular Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Rectangular Window
+subplot(3,3,2);
+plot((0:length(win_rectangular)-1)/Fs, win_rectangular, 'r', 'LineWidth', 1.5);
+title('Fungsi Rectangular Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    plot((0:length(seg_win_rectangular)-1)/Fs, seg_win_rectangular, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Rectangular Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hamming Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" "tooot" - Hamming Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hamming Window
+subplot(3,3,2);
+plot((0:length(win_hamming)-1)/Fs, win_hamming, 'r', 'LineWidth', 1.5);
+title('Fungsi Hamming Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    plot((0:length(seg_win_hamming)-1)/Fs, seg_win_hamming, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hamming Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hanning Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" "tooot" - Hanning Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hanning Window
+subplot(3,3,2);
+plot((0:length(win_hanning)-1)/Fs, win_hanning, 'r', 'LineWidth', 1.5);
+title('Fungsi Hanning Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    plot((0:length(seg_win_hanning)-1)/Fs, seg_win_hanning, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hanning Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x= 
+%             Analisis PSD Sinyal "tet" "tot"
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=
+
+disp(" ");
+disp("Analisis PSD Sinyal tet tot");
+
+durasi = 0.05;
+nfft = 4096; % untuk zero padding (2^12)
+
+% Deklarasi Window
+win_rectangular = rectwin(round(durasi*Fs) + 1);
+win_hamming = hamming(round(durasi*Fs) + 1);
+win_hanning = hann(round(durasi*Fs) + 1);
+
+t_starts_tet = [1.60646, 3.43342, 5.26565, 7.08896, 8.91415, 10.7427, ...
+                12.5639, 14.3965, 16.2361, 18.0407, 19.8694, 21.6945, ...
+                23.525, 25.3521];
+t_starts_tot = [0.695306, 2.52227, 4.35088, 6.17624, 8.00308, 9.82995, ...
+                11.6568, 13.4838, 15.3159, 17.1375, 18.9644, 20.7913, ...
+                22.6182, 24.4451, 26.2721];
+
+t_starts = [t_starts_tet, t_starts_tot];
+
+% Analisis PSD dengan Rectangular Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tet" "tot" - Rectangular Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tet" "tot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Rectangular Window
+subplot(3,3,2);
+plot((0:length(win_rectangular)-1)/Fs, win_rectangular, 'r', 'LineWidth', 1.5);
+title('Fungsi Rectangular Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    plot((0:length(seg_win_rectangular)-1)/Fs, seg_win_rectangular, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Rectangular Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hamming Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tet" "tot" - Hamming Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tet" "tot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hamming Window
+subplot(3,3,2);
+plot((0:length(win_hamming)-1)/Fs, win_hamming, 'r', 'LineWidth', 1.5);
+title('Fungsi Hamming Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    plot((0:length(seg_win_hamming)-1)/Fs, seg_win_hamming, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hamming Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hanning Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tet" "tot" - Hanning Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tet" "tot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hanning Window
+subplot(3,3,2);
+plot((0:length(win_hanning)-1)/Fs, win_hanning, 'r', 'LineWidth', 1.5);
+title('Fungsi Hanning Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    plot((0:length(seg_win_hanning)-1)/Fs, seg_win_hanning, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hanning Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x= 
+%          Analisis PSD Sinyal "teeet" Satu Segmen
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=
+
+disp(" ");
+disp("Analisis PSD Sinyal teeet Satu Segmen");
+
+durasi = 0.9169985714; 
+nfft = 65536; % untuk zero padding (2^16)
+
+% Deklarasi Window
+win_rectangular = rectwin(round(durasi*Fs) + 1);
+win_hamming = hamming(round(durasi*Fs) + 1);
+win_hanning = hann(round(durasi*Fs) + 1);
+
+t_starts = [1.60646];
+
+% Analisis PSD dengan Rectangular Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" Satu Segmen - Rectangular Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Rectangular Window
+subplot(3,3,2);
+plot((0:length(win_rectangular)-1)/Fs, win_rectangular, 'r', 'LineWidth', 1.5);
+title('Fungsi Rectangular Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    plot((0:length(seg_win_rectangular)-1)/Fs, seg_win_rectangular, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Rectangular Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hamming Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" Satu Segmen - Hamming Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hamming Window
+subplot(3,3,2);
+plot((0:length(win_hamming)-1)/Fs, win_hamming, 'r', 'LineWidth', 1.5);
+title('Fungsi Hamming Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    plot((0:length(seg_win_hamming)-1)/Fs, seg_win_hamming, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hamming Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hanning Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "teeet" Satu Segmen - Hanning Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "teeet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hanning Window
+subplot(3,3,2);
+plot((0:length(win_hanning)-1)/Fs, win_hanning, 'r', 'LineWidth', 1.5);
+title('Fungsi Hanning Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    plot((0:length(seg_win_hanning)-1)/Fs, seg_win_hanning, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hanning Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x= 
+%          Analisis PSD Sinyal "tooot" Satu Segmen
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=
+
+disp(" ");
+disp("Analisis PSD Sinyal tooot Satu Segmen");
+
+durasi = 0.9094676; 
+nfft = 65536; % untuk zero padding (2^16)
+
+% Deklarasi Window
+win_rectangular = rectwin(round(durasi*Fs) + 1);
+win_hamming = hamming(round(durasi*Fs) + 1);
+win_hanning = hann(round(durasi*Fs) + 1);
+
+t_starts = [0.695306];
+
+% Analisis PSD dengan Rectangular Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tooot" Satu Segmen - Rectangular Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Rectangular Window
+subplot(3,3,2);
+plot((0:length(win_rectangular)-1)/Fs, win_rectangular, 'r', 'LineWidth', 1.5);
+title('Fungsi Rectangular Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    plot((0:length(seg_win_rectangular)-1)/Fs, seg_win_rectangular, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Rectangular Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hamming Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tooot" Satu Segmen - Hamming Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hamming Window
+subplot(3,3,2);
+plot((0:length(win_hamming)-1)/Fs, win_hamming, 'r', 'LineWidth', 1.5);
+title('Fungsi Hamming Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    plot((0:length(seg_win_hamming)-1)/Fs, seg_win_hamming, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hamming Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hanning Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tooot" Satu Segmen - Hanning Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tooot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hanning Window
+subplot(3,3,2);
+plot((0:length(win_hanning)-1)/Fs, win_hanning, 'r', 'LineWidth', 1.5);
+title('Fungsi Hanning Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    plot((0:length(seg_win_hanning)-1)/Fs, seg_win_hanning, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hanning Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x= 
+%          Analisis PSD Sinyal "tet" Satu Segmen
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=
+
+disp(" ");
+disp("Analisis PSD Sinyal tet Satu Segmen");
+
+durasi = 0.05;
+nfft = 4096; % untuk zero padding (2^12)
+
+% Deklarasi Window
+win_rectangular = rectwin(round(durasi*Fs) + 1);
+win_hamming = hamming(round(durasi*Fs) + 1);
+win_hanning = hann(round(durasi*Fs) + 1);
+
+t_starts = [1.60646];
+
+% Analisis PSD dengan Rectangular Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tet" Satu Segmen - Rectangular Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Rectangular Window
+subplot(3,3,2);
+plot((0:length(win_rectangular)-1)/Fs, win_rectangular, 'r', 'LineWidth', 1.5);
+title('Fungsi Rectangular Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    plot((0:length(seg_win_rectangular)-1)/Fs, seg_win_rectangular, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Rectangular Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hamming Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tet" Satu Segmen - Hamming Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hamming Window
+subplot(3,3,2);
+plot((0:length(win_hamming)-1)/Fs, win_hamming, 'r', 'LineWidth', 1.5);
+title('Fungsi Hamming Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    plot((0:length(seg_win_hamming)-1)/Fs, seg_win_hamming, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hamming Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hanning Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tet" Satu Segmen - Hanning Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tet" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hanning Window
+subplot(3,3,2);
+plot((0:length(win_hanning)-1)/Fs, win_hanning, 'r', 'LineWidth', 1.5);
+title('Fungsi Hanning Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    plot((0:length(seg_win_hanning)-1)/Fs, seg_win_hanning, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hanning Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x= 
+%          Analisis PSD Sinyal "tot" Satu Segmen
+% =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=
+
+disp(" ");
+disp("Analisis PSD Sinyal tot Satu Segmen");
+
+durasi = 0.05;
+nfft = 4096; % untuk zero padding (2^12)
+
+% Deklarasi Window
+win_rectangular = rectwin(round(durasi*Fs) + 1);
+win_hamming = hamming(round(durasi*Fs) + 1);
+win_hanning = hann(round(durasi*Fs) + 1);
+
+t_starts = [0.695306];
+
+% Analisis PSD dengan Rectangular Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tot" Satu Segmen - Rectangular Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Rectangular Window
+subplot(3,3,2);
+plot((0:length(win_rectangular)-1)/Fs, win_rectangular, 'r', 'LineWidth', 1.5);
+title('Fungsi Rectangular Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    plot((0:length(seg_win_rectangular)-1)/Fs, seg_win_rectangular, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Rectangular Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hamming Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tot" Satu Segmen - Hamming Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hamming Window
+subplot(3,3,2);
+plot((0:length(win_hamming)-1)/Fs, win_hamming, 'r', 'LineWidth', 1.5);
+title('Fungsi Hamming Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    plot((0:length(seg_win_hamming)-1)/Fs, seg_win_hamming, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hamming Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Analisis PSD dengan Hanning Window
+
+figure('Color', 'w', 'Name', '1b. Analisis PSD - Sinyal "tot" Satu Segmen - Hanning Window');
+
+% Sinyal Domain Waktu
+subplot(3,3,1); 
+hold on;
+colors = lines(length(t_starts)); 
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg = s(idx);
+    plot((0:length(seg)-1)/Fs, seg, 'Color', colors(i,:), 'LineWidth', 0.5);
+end
+title(['Sinyal "tot" (', num2str(length(t_starts)), ' Segmen)']);
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Fungsi Hanning Window
+subplot(3,3,2);
+plot((0:length(win_hanning)-1)/Fs, win_hanning, 'r', 'LineWidth', 1.5);
+title('Fungsi Hanning Window');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Sinyal Hasil Windowing
+subplot(3,3,3); hold on;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    plot((0:length(seg_win_hanning)-1)/Fs, seg_win_hanning, 'Color', colors(i,:));
+end
+title('Sinyal Hasil Windowing');
+xlabel('Waktu (detik)'); 
+ylabel('Amplitudo'); 
+grid on;
+
+% Spektrum Tunggal
+subplot(3,3,4:6); 
+hold on;
+P_total = [];
+
+disp(" ");
+disp("DFT dengan Hanning Window");
+
+% tanpa Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
+
+P_total = [];
+
+% dengan Zero Padding
+tic;
+for i = 1:length(t_starts)
+    idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
+    seg_win_hanning = s(idx) .* hann(length(s(idx)));
+    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
+    
+    if isempty(P_total) 
+        P_total = P_temp; 
+    else 
+        P_total = P_total + P_temp; 
+    end
+end
+disp("Waktu DFT dengan zero padding = " + string(toc) + " detik");
+
+title('Spektrum Tunggal');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+% Spektrum Rata-Rata
+subplot(3,3,7:9);
+P_averaged = P_total / length(t_starts);
+plot(f, 10*log10(P_averaged), 'm', 'LineWidth', 1.5);
+title(['Spektrum Rata-Rata']);
+xlabel('Frekuensi (Hz)'); 
+ylabel('Power (dB)'); 
+xlim([0 2500]); 
+grid on;
+
+%% SOAL 1c
