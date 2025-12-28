@@ -1,8 +1,6 @@
 % TUGAS BESAR PSB - 1D Audio Filter dan Pemutaran
 clear; 
 clc; 
-
-%
 [x, Fs] = audioread('kereta.aac');
 
 % Gunakan saluran pertama (kiri) jika stereo
@@ -56,4 +54,5 @@ sound(y_tooot, Fs);
 pause(length(y_tooot)/Fs + 0.5);%Jeda ke pemutaran sinyal teeet
 disp('Pemutaran sinyal "teeet"');
 sound(y_teeet, Fs);
+
 
