@@ -2492,6 +2492,13 @@ grid on;
 disp(" ");
 disp("SOAL 1c");
 
+orde = 4;
+orde_fir1 = 500;
+Rp = 0.5;
+resolusi_resp_frek = 32768;
+impulse_signal = [1, zeros(1, 10000)];
+impulse_signal_fir1 = [1, zeros(1, 600)];
+
 % Desain Filter Built-In Sinyal "teeet"
 
 disp(" ");
@@ -2512,12 +2519,6 @@ f_high_teeet3 = f_teeet(3) + 10;
 wn_teeet1 = [f_low_teeet1, f_high_teeet1] / (Fs/2);
 wn_teeet2 = [f_low_teeet2, f_high_teeet2] / (Fs/2);
 wn_teeet3 = [f_low_teeet3, f_high_teeet3] / (Fs/2);
-
-% Desain filter
-orde = 4;
-orde_fir1 = 500;
-Rp = 0.5;
-resolusi_resp_frek = 32768;
 
 % Konstanta LCCDE
 [bteeet1_butter, ateeet1_butter] = butter(orde, wn_teeet1, 'bandpass');
@@ -2564,9 +2565,6 @@ Hteeet_fir1 = Hteeet1_fir1 + Hteeet2_fir1 + Hteeet3_fir1;
 w = wteeet1_butter;
 
 % Komponen Respons Impuls
-
-impulse_signal = [1, zeros(1, 200)];
-impulse_signal_fir1 = [1, zeros(1, orde_fir1)];
 hteeet1_butter = filter(bteeet1_butter, ateeet1_butter, impulse_signal);
 hteeet2_butter = filter(bteeet2_butter, ateeet3_butter, impulse_signal);
 hteeet3_butter = filter(bteeet3_butter, ateeet2_butter, impulse_signal);
@@ -2858,6 +2856,7 @@ legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location
 title({'Respons Impuls Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
 xlabel('Sampel (n)'); 
 ylabel('Amplitudo Respons Impuls [h(n)]');
+xlim([0 600]); 
 
 % LCCDE
 fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
@@ -2996,12 +2995,6 @@ wn_tooot1 = [f_low_tooot1, f_high_tooot1] / (Fs/2);
 wn_tooot2 = [f_low_tooot2, f_high_tooot2] / (Fs/2);
 wn_tooot3 = [f_low_tooot3, f_high_tooot3] / (Fs/2);
 
-% Desain filter
-orde = 4;
-orde_fir1 = 500;
-Rp = 0.5;
-resolusi_resp_frek = 32768;
-
 % Konstanta LCCDE
 [btooot1_butter, atooot1_butter] = butter(orde, wn_tooot1, 'bandpass');
 [btooot2_butter, atooot2_butter] = butter(orde, wn_tooot2, 'bandpass');
@@ -3047,9 +3040,6 @@ Htooot_fir1 = Htooot1_fir1 + Htooot2_fir1 + Htooot3_fir1;
 w = wtooot1_butter;
 
 % Komponen Respons Impuls
-
-impulse_signal = [1, zeros(1, 200)];
-impulse_signal_fir1 = [1, zeros(1, orde_fir1)];
 htooot1_butter = filter(btooot1_butter, atooot1_butter, impulse_signal);
 htooot2_butter = filter(btooot2_butter, atooot3_butter, impulse_signal);
 htooot3_butter = filter(btooot3_butter, atooot2_butter, impulse_signal);
@@ -3341,6 +3331,7 @@ legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location
 title({'Respons Impuls Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
 xlabel('Sampel (n)'); 
 ylabel('Amplitudo Respons Impuls [h(n)]');
+xlim([0 600]); 
 
 % LCCDE
 fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
