@@ -57,7 +57,6 @@ disp(" ");
 disp("Analisis PSD Sinyal teeet");
 
 durasi = 0.9169985714; 
-nfft = 65536; % untuk zero padding (2^16)
 
 % Deklarasi Window
 win_rectangular = rectwin(round(durasi*Fs) + 1);
@@ -106,41 +105,52 @@ xlabel('Waktu (detik)');
 ylabel('Amplitudo'); 
 grid on;
 
-
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Rectangular Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* rectwin(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* rectwin(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -206,35 +216,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hamming Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hamming(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hamming(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -300,37 +324,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hanning Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hann(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hann(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -363,7 +399,6 @@ disp(" ");
 disp("Analisis PSD Sinyal tooot");
 
 durasi = 0.9094676; 
-nfft = 65536; % untuk zero padding (2^16)
 
 % Deklarasi Window
 win_rectangular = rectwin(round(durasi*Fs) + 1);
@@ -415,37 +450,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Rectangular Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* rectwin(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* rectwin(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -511,35 +558,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hamming Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hamming(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hamming(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -605,37 +666,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hanning Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hann(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hann(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -668,7 +741,6 @@ disp(" ");
 disp("Analisis PSD Sinyal teeet tooot");
 
 durasi = 1.826345714;
-nfft = 131072; % untuk zero padding (2^17)
 
 % Deklarasi Window
 win_rectangular = rectwin(round(durasi*Fs) + 1);
@@ -720,37 +792,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Rectangular Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* rectwin(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* rectwin(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -816,35 +900,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hamming Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hamming(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hamming(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -910,37 +1008,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hanning Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hann(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hann(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -973,7 +1083,6 @@ disp(" ");
 disp("Analisis PSD Sinyal tet tot");
 
 durasi = 0.05;
-nfft = 4096; % untuk zero padding (2^12)
 
 % Deklarasi Window
 win_rectangular = rectwin(round(durasi*Fs) + 1);
@@ -1030,37 +1139,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Rectangular Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* rectwin(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* rectwin(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1126,35 +1247,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hamming Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hamming(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hamming(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1220,37 +1355,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hanning Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hann(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hann(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1283,7 +1430,6 @@ disp(" ");
 disp("Analisis PSD Sinyal teeet Satu Segmen");
 
 durasi = 0.9169985714; 
-nfft = 65536; % untuk zero padding (2^16)
 
 % Deklarasi Window
 win_rectangular = rectwin(round(durasi*Fs) + 1);
@@ -1333,37 +1479,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Rectangular Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* rectwin(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* rectwin(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1429,35 +1587,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hamming Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hamming(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hamming(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1523,37 +1695,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hanning Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hann(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hann(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1586,7 +1770,6 @@ disp(" ");
 disp("Analisis PSD Sinyal tooot Satu Segmen");
 
 durasi = 0.9094676; 
-nfft = 65536; % untuk zero padding (2^16)
 
 % Deklarasi Window
 win_rectangular = rectwin(round(durasi*Fs) + 1);
@@ -1636,37 +1819,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Rectangular Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* rectwin(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* rectwin(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1732,35 +1927,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hamming Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hamming(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hamming(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1826,37 +2035,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hanning Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hann(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hann(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -1889,7 +2110,6 @@ disp(" ");
 disp("Analisis PSD Sinyal tet Satu Segmen");
 
 durasi = 0.05;
-nfft = 4096; % untuk zero padding (2^12)
 
 % Deklarasi Window
 win_rectangular = rectwin(round(durasi*Fs) + 1);
@@ -1939,37 +2159,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Rectangular Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* rectwin(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* rectwin(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -2035,35 +2267,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hamming Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hamming(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hamming(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -2129,37 +2375,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hanning Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hann(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hann(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -2192,7 +2450,6 @@ disp(" ");
 disp("Analisis PSD Sinyal tot Satu Segmen");
 
 durasi = 0.05;
-nfft = 4096; % untuk zero padding (2^12)
 
 % Deklarasi Window
 win_rectangular = rectwin(round(durasi*Fs) + 1);
@@ -2242,37 +2499,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Rectangular Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* rectwin(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_rectangular = s(idx) .* rectwin(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_rectangular, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* rectwin(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -2338,35 +2607,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hamming Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hamming(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hamming = s(idx) .* hamming(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hamming, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hamming(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -2432,37 +2715,49 @@ grid on;
 % Spektrum Tunggal
 subplot(3,3,4:6); 
 hold on;
-P_total = [];
 
 disp(" ");
 disp("DFT dengan Hanning Window");
 
 % tanpa Zero Padding
+P_total = [];
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], [], Fs);
-    plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
-    if isempty(P_total) 
-        P_total = P_temp; 
-    else 
-        P_total = P_total + P_temp; 
+    x_seg = s(idx);
+    L = length(x_seg);
+    x_win = x_seg .* hann(L); 
+    X1 = fft(x_win);
+    P2 = (abs(X1/L).^2); 
+    P1 = P2(1:floor(L/2)+1);
+    P1(2:end-1) = 2 * P1(2:end-1);
+    f_seg = Fs * (0:floor(L/2)) / L;
+    plot(f_seg, 10*log10(P1), 'Color', colors(i,:), 'LineWidth', 0.3);
+    if isempty(P_total)
+        P_total = P1;
+    else
+        P_total = P_total + P1;
     end
 end
 disp("Waktu DFT tanpa zero padding = " + string(toc) + " detik");
 
-P_total = [];
-
 % dengan Zero Padding
+P_total = [];
+L = length(round(t_starts(1)*Fs) : round((t_starts(1)+durasi)*Fs)); 
+N2 = 2^(ceil(log2(L)));
+
 tic;
 for i = 1:length(t_starts)
     idx = round(t_starts(i)*Fs) : round((t_starts(i)+durasi)*Fs);
-    seg_win_hanning = s(idx) .* hann(length(s(idx)));
-    [P_temp, f] = periodogram(seg_win_hanning, [], nfft, Fs);
+    x_seg = s(idx);
+    x_win = x_seg .* hann(length(x_seg));
+    X2 = fft(x_win, N2); 
+    P_full = (abs(X2/L).^2); 
+    P_temp = P_full(1:N2/2+1);
+    P_temp(2:end-1) = 2 * P_temp(2:end-1);
+    f = Fs * (0:(N2/2)) / N2;
     plot(f, 10*log10(P_temp), 'Color', colors(i,:), 'LineWidth', 0.3);
-    
     if isempty(P_total) 
         P_total = P_temp; 
     else 
@@ -2598,8 +2893,15 @@ fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet1_butter)
         val_a = -ateeet1_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet1_butter)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet1_butter(k));
@@ -2618,8 +2920,15 @@ fprintf('Persamaan LCCDE Filter Butter Built-In Frekuensi Harmonik 1\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet2_butter)
         val_a = -ateeet2_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet2_butter)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet2_butter(k));
@@ -2638,8 +2947,15 @@ fprintf('Persamaan LCCDE Filter Butter Built-In Frekuensi Harmonik 2\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet3_butter)
         val_a = -ateeet3_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet3_butter)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet3_butter(k));
@@ -2730,8 +3046,15 @@ fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet1_cheby1)
         val_a = -ateeet1_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet1_cheby1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet1_cheby1(k));
@@ -2750,8 +3073,15 @@ fprintf('Persamaan LCCDE Filter Cheby1 Built-In Frekuensi Harmonik 1\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet2_cheby1)
         val_a = -ateeet2_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet2_cheby1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet2_cheby1(k));
@@ -2770,8 +3100,15 @@ fprintf('Persamaan LCCDE Filter Cheby1 Built-In Frekuensi Harmonik 2\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet3_cheby1)
         val_a = -ateeet3_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet3_cheby1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet3_cheby1(k));
@@ -2863,8 +3200,15 @@ fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet1_fir1)
         val_a = -ateeet1_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet1_fir1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet1_fir1(k));
@@ -2883,8 +3227,15 @@ fprintf('Persamaan LCCDE Filter FIR1 Built-In Frekuensi Harmonik 1\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet2_fir1)
         val_a = -ateeet2_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet2_fir1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet2_fir1(k));
@@ -2903,8 +3254,15 @@ fprintf('Persamaan LCCDE Filter FIR1 Built-In Frekuensi Harmonik 2\n');
 fprintf('y(n) = ');
 for k = 2:length(ateeet3_fir1)
         val_a = -ateeet3_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(bteeet3_fir1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', bteeet3_fir1(k));
@@ -3073,8 +3431,15 @@ fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot1_butter)
         val_a = -atooot1_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(btooot1_butter)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot1_butter(k));
@@ -3093,8 +3458,15 @@ fprintf('Persamaan LCCDE Filter Butter Built-In Frekuensi Harmonik 1\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot2_butter)
         val_a = -atooot2_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(btooot2_butter)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot2_butter(k));
@@ -3113,8 +3485,15 @@ fprintf('Persamaan LCCDE Filter Butter Built-In Frekuensi Harmonik 2\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot3_butter)
         val_a = -atooot3_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(btooot3_butter)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot3_butter(k));
@@ -3205,8 +3584,15 @@ fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot1_cheby1)
         val_a = -atooot1_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(btooot1_cheby1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot1_cheby1(k));
@@ -3225,8 +3611,15 @@ fprintf('Persamaan LCCDE Filter Cheby1 Built-In Frekuensi Harmonik 1\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot2_cheby1)
         val_a = -atooot2_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(btooot2_cheby1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot2_cheby1(k));
@@ -3245,8 +3638,15 @@ fprintf('Persamaan LCCDE Filter Cheby1 Built-In Frekuensi Harmonik 2\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot3_cheby1)
         val_a = -atooot3_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+fprintf('+ ');
 for k = 1:length(btooot3_cheby1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot3_cheby1(k));
@@ -3338,8 +3738,15 @@ fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot1_fir1)
         val_a = -atooot1_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+
 for k = 1:length(btooot1_fir1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot1_fir1(k));
@@ -3358,8 +3765,15 @@ fprintf('Persamaan LCCDE Filter FIR1 Built-In Frekuensi Harmonik 1\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot2_fir1)
         val_a = -atooot2_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+
 for k = 1:length(btooot2_fir1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot2_fir1(k));
@@ -3378,8 +3792,15 @@ fprintf('Persamaan LCCDE Filter FIR1 Built-In Frekuensi Harmonik 2\n');
 fprintf('y(n) = ');
 for k = 2:length(atooot3_fir1)
         val_a = -atooot3_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
-        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        if (val_a == 0 || val_a == -0)
+            fprintf('');
+        elseif (k == 2)
+            fprintf('(%.4g)y[n-%d] ', val_a, k-1);
+        else
+            fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+        end
 end
+
 for k = 1:length(btooot3_fir1)
     if k == 1
         fprintf('%s(%.4g)x[n] ', btooot3_fir1(k));
