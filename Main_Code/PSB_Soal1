@@ -2496,7 +2496,7 @@ orde = 4;
 orde_fir1 = 500;
 Rp = 0.5;
 resolusi_resp_frek = 32768;
-impulse_signal = [1, zeros(1, 10000)];
+impulse_signal = [1, zeros(1, 3000)];
 impulse_signal_fir1 = [1, zeros(1, 600)];
 
 % Desain Filter Built-In Sinyal "teeet"
@@ -2507,14 +2507,14 @@ disp("Desain Filter Sinyal teeet")
 % Parameter Filter
 f_teeet = [758.372, 1516.74, 2275.12];
 
-f_low_teeet1 = f_teeet(1) - 10;
-f_high_teeet1 = f_teeet(1) + 10;
+f_low_teeet1 = f_teeet(1) - 25;
+f_high_teeet1 = f_teeet(1) + 25;
 
-f_low_teeet2 = f_teeet(2) - 10;
-f_high_teeet2 = f_teeet(2) + 10;
+f_low_teeet2 = f_teeet(2) - 25;
+f_high_teeet2 = f_teeet(2) + 25;
 
-f_low_teeet3 = f_teeet(3) - 10;
-f_high_teeet3 = f_teeet(3) + 10;
+f_low_teeet3 = f_teeet(3) - 25;
+f_high_teeet3 = f_teeet(3) + 25;
 
 wn_teeet1 = [f_low_teeet1, f_high_teeet1] / (Fs/2);
 wn_teeet2 = [f_low_teeet2, f_high_teeet2] / (Fs/2);
@@ -2566,11 +2566,11 @@ w = wteeet1_butter;
 
 % Komponen Respons Impuls
 hteeet1_butter = filter(bteeet1_butter, ateeet1_butter, impulse_signal);
-hteeet2_butter = filter(bteeet2_butter, ateeet3_butter, impulse_signal);
-hteeet3_butter = filter(bteeet3_butter, ateeet2_butter, impulse_signal);
+hteeet2_butter = filter(bteeet2_butter, ateeet2_butter, impulse_signal);
+hteeet3_butter = filter(bteeet3_butter, ateeet3_butter, impulse_signal);
 hteeet1_cheby1 = filter(bteeet1_cheby1, ateeet1_cheby1, impulse_signal);
-hteeet2_cheby1 = filter(bteeet2_cheby1, ateeet3_cheby1, impulse_signal);
-hteeet3_cheby1 = filter(bteeet3_cheby1, ateeet2_cheby1, impulse_signal);
+hteeet2_cheby1 = filter(bteeet2_cheby1, ateeet2_cheby1, impulse_signal);
+hteeet3_cheby1 = filter(bteeet3_cheby1, ateeet3_cheby1, impulse_signal);
 hteeet1_fir1 = conv(bteeet1_fir1, impulse_signal_fir1);
 hteeet2_fir1 = conv(bteeet2_fir1, impulse_signal_fir1);
 hteeet3_fir1 = conv(bteeet3_fir1, impulse_signal_fir1);
@@ -2982,14 +2982,14 @@ disp("Desain Filter Sinyal tooot")
 
 f_tooot = [555.826, 1111.65, 1667.48];
 
-f_low_tooot1 = f_tooot(1) - 10;
-f_high_tooot1 = f_tooot(1) + 10;
+f_low_tooot1 = f_tooot(1) - 25;
+f_high_tooot1 = f_tooot(1) + 25;
 
-f_low_tooot2 = f_tooot(2) - 10;
-f_high_tooot2 = f_tooot(2) + 10;
+f_low_tooot2 = f_tooot(2) - 25;
+f_high_tooot2 = f_tooot(2) + 25;
 
-f_low_tooot3 = f_tooot(3) - 10;
-f_high_tooot3 = f_tooot(3) + 10;
+f_low_tooot3 = f_tooot(3) - 25;
+f_high_tooot3 = f_tooot(3) + 25;
 
 wn_tooot1 = [f_low_tooot1, f_high_tooot1] / (Fs/2);
 wn_tooot2 = [f_low_tooot2, f_high_tooot2] / (Fs/2);
@@ -3041,11 +3041,11 @@ w = wtooot1_butter;
 
 % Komponen Respons Impuls
 htooot1_butter = filter(btooot1_butter, atooot1_butter, impulse_signal);
-htooot2_butter = filter(btooot2_butter, atooot3_butter, impulse_signal);
-htooot3_butter = filter(btooot3_butter, atooot2_butter, impulse_signal);
+htooot2_butter = filter(btooot2_butter, atooot2_butter, impulse_signal);
+htooot3_butter = filter(btooot3_butter, atooot3_butter, impulse_signal);
 htooot1_cheby1 = filter(btooot1_cheby1, atooot1_cheby1, impulse_signal);
-htooot2_cheby1 = filter(btooot2_cheby1, atooot3_cheby1, impulse_signal);
-htooot3_cheby1 = filter(btooot3_cheby1, atooot2_cheby1, impulse_signal);
+htooot2_cheby1 = filter(btooot2_cheby1, atooot2_cheby1, impulse_signal);
+htooot3_cheby1 = filter(btooot3_cheby1, atooot3_cheby1, impulse_signal);
 htooot1_fir1 = conv(btooot1_fir1, impulse_signal_fir1);
 htooot2_fir1 = conv(btooot2_fir1, impulse_signal_fir1);
 htooot3_fir1 = conv(btooot3_fir1, impulse_signal_fir1);
