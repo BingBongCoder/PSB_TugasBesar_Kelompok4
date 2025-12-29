@@ -2488,3 +2488,968 @@ xlim([0 2500]);
 grid on;
 
 %% SOAL 1c
+
+% Desain Filter Built-In Sinyal "teeet"
+
+disp(" ");
+disp("Desain Filter Sinyal teeet")
+
+% Parameter Filter
+f_teeet = [758.372, 1516.74, 2275.12];
+
+f_low_teeet1 = f_teeet(1) - 10;
+f_high_teeet1 = f_teeet(1) + 10;
+
+f_low_teeet2 = f_teeet(2) - 10;
+f_high_teeet2 = f_teeet(2) + 10;
+
+f_low_teeet3 = f_teeet(3) - 10;
+f_high_teeet3 = f_teeet(3) + 10;
+
+wn_teeet1 = [f_low_teeet1, f_high_teeet1] / (Fs/2);
+wn_teeet2 = [f_low_teeet2, f_high_teeet2] / (Fs/2);
+wn_teeet3 = [f_low_teeet3, f_high_teeet3] / (Fs/2);
+
+% Desain filter
+orde = 4;
+orde_fir1 = 500;
+Rp = 0.5;
+resolusi_resp_frek = 32768;
+
+% Konstanta LCCDE
+[bteeet1_butter, ateeet1_butter] = butter(orde, wn_teeet1, 'bandpass');
+[bteeet2_butter, ateeet2_butter] = butter(orde, wn_teeet2, 'bandpass');
+[bteeet3_butter, ateeet3_butter] = butter(orde, wn_teeet3, 'bandpass');
+[bteeet1_cheby1, ateeet1_cheby1] = cheby1(orde, Rp, wn_teeet1, 'bandpass');
+[bteeet2_cheby1, ateeet2_cheby1] = cheby1(orde, Rp, wn_teeet2, 'bandpass');
+[bteeet3_cheby1, ateeet3_cheby1] = cheby1(orde, Rp, wn_teeet3, 'bandpass');
+bteeet1_fir1 = fir1(orde_fir1, wn_teeet1, 'bandpass');
+bteeet2_fir1 = fir1(orde_fir1, wn_teeet2, 'bandpass');
+bteeet3_fir1 = fir1(orde_fir1, wn_teeet3, 'bandpass');
+ateeet1_fir1 = zeros(1, length(bteeet1_fir1)); 
+ateeet2_fir1 = zeros(1, length(bteeet2_fir1)); 
+ateeet3_fir1 = zeros(1, length(bteeet3_fir1)); 
+ateeet1_fir1(1) = 1;
+ateeet2_fir1(1) = 1;
+ateeet3_fir1(1) = 1;
+
+% Komponen Pole dan Zero
+[zteeet1_butter, pteeet1_butter, kteeet1_butter] = tf2zp(bteeet1_butter, ateeet1_butter);
+[zteeet2_butter, pteeet2_butter, kteeet2_butter] = tf2zp(bteeet2_butter, ateeet2_butter);
+[zteeet3_butter, pteeet3_butter, kteeet3_butter] = tf2zp(bteeet3_butter, ateeet3_butter);
+[zteeet1_cheby1, pteeet1_cheby1, kteeet1_cheby1] = tf2zp(bteeet1_cheby1, ateeet1_cheby1);
+[zteeet2_cheby1, pteeet2_cheby1, kteeet2_cheby1] = tf2zp(bteeet2_cheby1, ateeet2_cheby1);
+[zteeet3_cheby1, pteeet3_cheby1, kteeet3_cheby1] = tf2zp(bteeet3_cheby1, ateeet3_cheby1);
+[zteeet1_fir1, pteeet1_fir1, kteeet1_fir1] = tf2zp(bteeet1_fir1, ateeet1_fir1);
+[zteeet2_fir1, pteeet2_fir1, kteeet2_fir1] = tf2zp(bteeet2_fir1, ateeet2_fir1);
+[zteeet3_fir1, pteeet3_fir1, kteeet3_fir1] = tf2zp(bteeet3_fir1, ateeet3_fir1);
+
+% Komponen Respons Frekuensi Sistem
+[Hteeet1_butter, wteeet1_butter] = freqz(bteeet1_butter, ateeet1_butter, resolusi_resp_frek, Fs);
+[Hteeet2_butter, wteeet2_butter] = freqz(bteeet2_butter, ateeet2_butter, resolusi_resp_frek, Fs);
+[Hteeet3_butter, wteeet3_butter] = freqz(bteeet3_butter, ateeet3_butter, resolusi_resp_frek, Fs);
+[Hteeet1_cheby1, wteeet1_cheby1] = freqz(bteeet1_cheby1, ateeet1_cheby1, resolusi_resp_frek, Fs);
+[Hteeet2_cheby1, wteeet2_cheby1] = freqz(bteeet2_cheby1, ateeet2_cheby1, resolusi_resp_frek, Fs);
+[Hteeet3_cheby1, wteeet3_cheby1] = freqz(bteeet3_cheby1, ateeet3_cheby1, resolusi_resp_frek, Fs);
+[Hteeet1_fir1, wteeet1_fir1] = freqz(bteeet1_fir1, ateeet1_fir1, resolusi_resp_frek, Fs);
+[Hteeet2_fir1, wteeet2_fir1] = freqz(bteeet2_fir1, ateeet2_fir1, resolusi_resp_frek, Fs);
+[Hteeet3_fir1, wteeet3_fir1] = freqz(bteeet3_fir1, ateeet3_fir1, resolusi_resp_frek, Fs);
+
+Hteeet_butter = Hteeet1_butter + Hteeet2_butter + Hteeet3_butter;
+Hteeet_cheby1 = Hteeet1_cheby1 + Hteeet2_cheby1 + Hteeet3_cheby1;
+Hteeet_fir1 = Hteeet1_fir1 + Hteeet2_fir1 + Hteeet3_fir1;
+w = wteeet1_butter;
+
+% Komponen Respons Impuls
+
+impulse_signal = [1, zeros(1, 200)];
+impulse_signal_fir1 = [1, zeros(1, orde_fir1)];
+hteeet1_butter = filter(bteeet1_butter, ateeet1_butter, impulse_signal);
+hteeet2_butter = filter(bteeet2_butter, ateeet3_butter, impulse_signal);
+hteeet3_butter = filter(bteeet3_butter, ateeet2_butter, impulse_signal);
+hteeet1_cheby1 = filter(bteeet1_cheby1, ateeet1_cheby1, impulse_signal);
+hteeet2_cheby1 = filter(bteeet2_cheby1, ateeet3_cheby1, impulse_signal);
+hteeet3_cheby1 = filter(bteeet3_cheby1, ateeet2_cheby1, impulse_signal);
+hteeet1_fir1 = conv(bteeet1_fir1, impulse_signal_fir1);
+hteeet2_fir1 = conv(bteeet2_fir1, impulse_signal_fir1);
+hteeet3_fir1 = conv(bteeet3_fir1, impulse_signal_fir1);
+
+% Representasi Sistem
+% Filter Butter Built-In
+figure('Color', 'w', 'Name', '1c. Filter - Sinyal "teeet" - Butter Built-In');
+disp(" ");
+disp("Representasi Sistem Filter Butter Built-In");
+
+% Respons Impuls
+subplot(2,3,1);
+plot(hteeet1_butter, 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(hteeet2_butter, 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(hteeet3_butter, 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Impuls Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Sampel (n)'); 
+ylabel('Amplitudo Respons Impuls [h(n)]');
+
+% LCCDE
+fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet1_butter)
+        val_a = -ateeet1_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet1_butter)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet1_butter(k));
+    else
+        sign_char = '+'; 
+        if bteeet1_butter(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet1_butter(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter Butter Built-In Frekuensi Harmonik 1\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet2_butter)
+        val_a = -ateeet2_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet2_butter)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet2_butter(k));
+    else
+        sign_char = '+'; 
+        if bteeet2_butter(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet2_butter(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter Butter Built-In Frekuensi Harmonik 2\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet3_butter)
+        val_a = -ateeet3_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet3_butter)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet3_butter(k));
+    else
+        sign_char = '+'; 
+        if bteeet3_butter(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet3_butter(k), k-1);
+    end
+end
+
+disp(" ");
+
+% Peta Pole-Zero
+subplot(2,3,4);
+zplane(zteeet1_butter, pteeet1_butter);
+hold on;
+zplane(zteeet2_butter, pteeet2_butter);
+zplane(zteeet3_butter, pteeet3_butter);
+hold off;
+title({'Peta Pole-Zero Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Re(z)'); 
+ylabel('Im(z)');
+ylim([-1.5 1.5]);
+xlim([-1.5 1.5]);
+
+% Respons Frekuensi
+% Magnitudo
+subplot(2,3,2);
+plot(wteeet1_butter, 20*log10(abs(Hteeet1_butter)), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wteeet2_butter, 20*log10(abs(Hteeet2_butter)), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wteeet3_butter, 20*log10(abs(Hteeet3_butter)), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Magnitudo Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 3250]); 
+
+subplot(2,3,5);
+plot(w, 20*log10(abs(Hteeet_butter)), 'k', 'LineWidth', 1.5);
+title('Respons Magnitudo Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 3250]); 
+
+% Fasa
+subplot(2,3,3);
+plot(wteeet1_butter, angle(Hteeet1_butter), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wteeet2_butter, angle(Hteeet2_butter), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wteeet3_butter, angle(Hteeet3_butter), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Fasa Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 3250]); 
+
+subplot(2,3,6);
+plot(w, angle(Hteeet_butter), 'k', 'LineWidth', 1.5);
+title('Respons Fasa Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 3250]); 
+
+% Filter Cheby1 Built-In
+figure('Color', 'w', 'Name', '1c. Filter - Sinyal "teeet" - Cheby1 Built-In');
+disp(" ");
+disp("Representasi Sistem Filter Cheby1 Built-In");
+
+% Respons Impuls
+subplot(2,3,1);
+plot(hteeet1_cheby1, 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(hteeet2_cheby1, 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(hteeet3_cheby1, 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Impuls Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Sampel (n)'); 
+ylabel('Amplitudo Respons Impuls [h(n)]');
+
+% LCCDE
+fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet1_cheby1)
+        val_a = -ateeet1_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet1_cheby1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet1_cheby1(k));
+    else
+        sign_char = '+'; 
+        if bteeet1_cheby1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet1_cheby1(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter Cheby1 Built-In Frekuensi Harmonik 1\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet2_cheby1)
+        val_a = -ateeet2_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet2_cheby1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet2_cheby1(k));
+    else
+        sign_char = '+'; 
+        if bteeet2_cheby1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet2_cheby1(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter Cheby1 Built-In Frekuensi Harmonik 2\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet3_cheby1)
+        val_a = -ateeet3_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet3_cheby1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet3_cheby1(k));
+    else
+        sign_char = '+'; 
+        if bteeet3_cheby1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet3_cheby1(k), k-1);
+    end
+end
+
+disp(" ");
+
+% Peta Pole-Zero
+subplot(2,3,4);
+zplane(zteeet1_cheby1, pteeet1_cheby1);
+hold on;
+zplane(zteeet2_cheby1, pteeet2_cheby1);
+zplane(zteeet3_cheby1, pteeet3_cheby1);
+hold off;
+title({'Peta Pole-Zero Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Re(z)'); 
+ylabel('Im(z)');
+ylim([-1.5 1.5]);
+xlim([-1.5 1.5]);
+
+% Respons Frekuensi
+% Magnitudo
+subplot(2,3,2);
+plot(wteeet1_cheby1, 20*log10(abs(Hteeet1_cheby1)), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wteeet2_cheby1, 20*log10(abs(Hteeet2_cheby1)), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wteeet3_cheby1, 20*log10(abs(Hteeet3_cheby1)), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Magnitudo Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 3250]); 
+
+subplot(2,3,5);
+plot(w, 20*log10(abs(Hteeet_cheby1)), 'k', 'LineWidth', 1.5);
+title('Respons Magnitudo Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 3250]); 
+
+% Fasa
+subplot(2,3,3);
+plot(wteeet1_cheby1, angle(Hteeet1_cheby1), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wteeet2_cheby1, angle(Hteeet2_cheby1), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wteeet3_cheby1, angle(Hteeet3_cheby1), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Fasa Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 3250]); 
+
+subplot(2,3,6);
+plot(w, angle(Hteeet_cheby1), 'k', 'LineWidth', 1.5);
+title('Respons Fasa Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 3250]); 
+
+% Filter FIR1 Built-In
+figure('Color', 'w', 'Name', '1c. Filter - Sinyal "teeet" - FIR1 Built-In');
+disp(" ");
+disp("Representasi Sistem Filter FIR1 Built-In");
+
+% Respons Impuls
+subplot(2,3,1);
+plot(hteeet1_fir1, 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(hteeet2_fir1, 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(hteeet3_fir1, 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Impuls Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Sampel (n)'); 
+ylabel('Amplitudo Respons Impuls [h(n)]');
+
+% LCCDE
+fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet1_fir1)
+        val_a = -ateeet1_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet1_fir1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet1_fir1(k));
+    else
+        sign_char = '+'; 
+        if bteeet1_fir1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet1_fir1(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter FIR1 Built-In Frekuensi Harmonik 1\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet2_fir1)
+        val_a = -ateeet2_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet2_fir1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet2_fir1(k));
+    else
+        sign_char = '+'; 
+        if bteeet2_fir1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet2_fir1(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter FIR1 Built-In Frekuensi Harmonik 2\n');
+fprintf('y(n) = ');
+for k = 2:length(ateeet3_fir1)
+        val_a = -ateeet3_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(bteeet3_fir1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', bteeet3_fir1(k));
+    else
+        sign_char = '+'; 
+        if bteeet3_fir1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, bteeet3_fir1(k), k-1);
+    end
+end
+
+disp(" ");
+
+% Peta Pole-Zero
+subplot(2,3,4);
+zplane(zteeet1_fir1, pteeet1_fir1);
+hold on;
+zplane(zteeet2_fir1, pteeet2_fir1);
+zplane(zteeet3_fir1, pteeet3_fir1);
+hold off;
+title({'Peta Pole-Zero Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Re(z)'); 
+ylabel('Im(z)');
+ylim([-1.5 1.5]);
+xlim([-1.5 1.5]);
+
+% Respons Frekuensi
+% Magnitudo
+subplot(2,3,2);
+plot(wteeet1_fir1, 20*log10(abs(Hteeet1_fir1)), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wteeet2_fir1, 20*log10(abs(Hteeet2_fir1)), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wteeet3_fir1, 20*log10(abs(Hteeet3_fir1)), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Magnitudo Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 3250]); 
+
+subplot(2,3,5);
+plot(w, 20*log10(abs(Hteeet_fir1)), 'k', 'LineWidth', 1.5);
+title('Respons Magnitudo Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 3250]); 
+
+% Fasa
+subplot(2,3,3);
+plot(wteeet1_fir1, angle(Hteeet1_fir1), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wteeet2_fir1, angle(Hteeet2_fir1), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wteeet3_fir1, angle(Hteeet3_fir1), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Fasa Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 3250]); 
+
+subplot(2,3,6);
+plot(w, angle(Hteeet_fir1), 'k', 'LineWidth', 1.5);
+title('Respons Fasa Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 3250]); 
+
+% Desain Filter Built-In Sinyal "tooot"
+
+disp(" ");
+disp("Desain Filter Sinyal tooot")
+
+% Parameter Filter
+
+f_tooot = [555.826, 1111.65, 1667.48];
+
+f_low_tooot1 = f_tooot(1) - 10;
+f_high_tooot1 = f_tooot(1) + 10;
+
+f_low_tooot2 = f_tooot(2) - 10;
+f_high_tooot2 = f_tooot(2) + 10;
+
+f_low_tooot3 = f_tooot(3) - 10;
+f_high_tooot3 = f_tooot(3) + 10;
+
+wn_tooot1 = [f_low_tooot1, f_high_tooot1] / (Fs/2);
+wn_tooot2 = [f_low_tooot2, f_high_tooot2] / (Fs/2);
+wn_tooot3 = [f_low_tooot3, f_high_tooot3] / (Fs/2);
+
+% Desain filter
+orde = 4;
+orde_fir1 = 500;
+Rp = 0.5;
+resolusi_resp_frek = 32768;
+
+% Konstanta LCCDE
+[btooot1_butter, atooot1_butter] = butter(orde, wn_tooot1, 'bandpass');
+[btooot2_butter, atooot2_butter] = butter(orde, wn_tooot2, 'bandpass');
+[btooot3_butter, atooot3_butter] = butter(orde, wn_tooot3, 'bandpass');
+[btooot1_cheby1, atooot1_cheby1] = cheby1(orde, Rp, wn_tooot1, 'bandpass');
+[btooot2_cheby1, atooot2_cheby1] = cheby1(orde, Rp, wn_tooot2, 'bandpass');
+[btooot3_cheby1, atooot3_cheby1] = cheby1(orde, Rp, wn_tooot3, 'bandpass');
+btooot1_fir1 = fir1(orde_fir1, wn_tooot1, 'bandpass');
+btooot2_fir1 = fir1(orde_fir1, wn_tooot2, 'bandpass');
+btooot3_fir1 = fir1(orde_fir1, wn_tooot3, 'bandpass');
+atooot1_fir1 = zeros(1, length(btooot1_fir1)); 
+atooot2_fir1 = zeros(1, length(btooot2_fir1)); 
+atooot3_fir1 = zeros(1, length(btooot3_fir1)); 
+atooot1_fir1(1) = 1;
+atooot2_fir1(1) = 1;
+atooot3_fir1(1) = 1;
+
+% Komponen Pole dan Zero
+[ztooot1_butter, ptooot1_butter, ktooot1_butter] = tf2zp(btooot1_butter, atooot1_butter);
+[ztooot2_butter, ptooot2_butter, ktooot2_butter] = tf2zp(btooot2_butter, atooot2_butter);
+[ztooot3_butter, ptooot3_butter, ktooot3_butter] = tf2zp(btooot3_butter, atooot3_butter);
+[ztooot1_cheby1, ptooot1_cheby1, ktooot1_cheby1] = tf2zp(btooot1_cheby1, atooot1_cheby1);
+[ztooot2_cheby1, ptooot2_cheby1, ktooot2_cheby1] = tf2zp(btooot2_cheby1, atooot2_cheby1);
+[ztooot3_cheby1, ptooot3_cheby1, ktooot3_cheby1] = tf2zp(btooot3_cheby1, atooot3_cheby1);
+[ztooot1_fir1, ptooot1_fir1, ktooot1_fir1] = tf2zp(btooot1_fir1, atooot1_fir1);
+[ztooot2_fir1, ptooot2_fir1, ktooot2_fir1] = tf2zp(btooot2_fir1, atooot2_fir1);
+[ztooot3_fir1, ptooot3_fir1, ktooot3_fir1] = tf2zp(btooot3_fir1, atooot3_fir1);
+
+% Komponen Respons Frekuensi Sistem
+[Htooot1_butter, wtooot1_butter] = freqz(btooot1_butter, atooot1_butter, resolusi_resp_frek, Fs);
+[Htooot2_butter, wtooot2_butter] = freqz(btooot2_butter, atooot2_butter, resolusi_resp_frek, Fs);
+[Htooot3_butter, wtooot3_butter] = freqz(btooot3_butter, atooot3_butter, resolusi_resp_frek, Fs);
+[Htooot1_cheby1, wtooot1_cheby1] = freqz(btooot1_cheby1, atooot1_cheby1, resolusi_resp_frek, Fs);
+[Htooot2_cheby1, wtooot2_cheby1] = freqz(btooot2_cheby1, atooot2_cheby1, resolusi_resp_frek, Fs);
+[Htooot3_cheby1, wtooot3_cheby1] = freqz(btooot3_cheby1, atooot3_cheby1, resolusi_resp_frek, Fs);
+[Htooot1_fir1, wtooot1_fir1] = freqz(btooot1_fir1, atooot1_fir1, resolusi_resp_frek, Fs);
+[Htooot2_fir1, wtooot2_fir1] = freqz(btooot2_fir1, atooot2_fir1, resolusi_resp_frek, Fs);
+[Htooot3_fir1, wtooot3_fir1] = freqz(btooot3_fir1, atooot3_fir1, resolusi_resp_frek, Fs);
+
+Htooot_butter = Htooot1_butter + Htooot2_butter + Htooot3_butter;
+Htooot_cheby1 = Htooot1_cheby1 + Htooot2_cheby1 + Htooot3_cheby1;
+Htooot_fir1 = Htooot1_fir1 + Htooot2_fir1 + Htooot3_fir1;
+w = wtooot1_butter;
+
+% Komponen Respons Impuls
+
+impulse_signal = [1, zeros(1, 200)];
+impulse_signal_fir1 = [1, zeros(1, orde_fir1)];
+htooot1_butter = filter(btooot1_butter, atooot1_butter, impulse_signal);
+htooot2_butter = filter(btooot2_butter, atooot3_butter, impulse_signal);
+htooot3_butter = filter(btooot3_butter, atooot2_butter, impulse_signal);
+htooot1_cheby1 = filter(btooot1_cheby1, atooot1_cheby1, impulse_signal);
+htooot2_cheby1 = filter(btooot2_cheby1, atooot3_cheby1, impulse_signal);
+htooot3_cheby1 = filter(btooot3_cheby1, atooot2_cheby1, impulse_signal);
+htooot1_fir1 = conv(btooot1_fir1, impulse_signal_fir1);
+htooot2_fir1 = conv(btooot2_fir1, impulse_signal_fir1);
+htooot3_fir1 = conv(btooot3_fir1, impulse_signal_fir1);
+
+% Representasi Sistem
+% Filter Butter Built-In
+figure('Color', 'w', 'Name', '1c. Filter - Sinyal "tooot" - Butter Built-In');
+disp(" ");
+disp("Representasi Sistem Filter Butter Built-In");
+
+% Respons Impuls
+subplot(2,3,1);
+plot(htooot1_butter, 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(htooot2_butter, 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(htooot3_butter, 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Impuls Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Sampel (n)'); 
+ylabel('Amplitudo Respons Impuls [h(n)]');
+
+% LCCDE
+fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot1_butter)
+        val_a = -atooot1_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot1_butter)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot1_butter(k));
+    else
+        sign_char = '+'; 
+        if btooot1_butter(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot1_butter(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter Butter Built-In Frekuensi Harmonik 1\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot2_butter)
+        val_a = -atooot2_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot2_butter)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot2_butter(k));
+    else
+        sign_char = '+'; 
+        if btooot2_butter(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot2_butter(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter Butter Built-In Frekuensi Harmonik 2\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot3_butter)
+        val_a = -atooot3_butter(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot3_butter)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot3_butter(k));
+    else
+        sign_char = '+'; 
+        if btooot3_butter(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot3_butter(k), k-1);
+    end
+end
+
+disp(" ");
+
+% Peta Pole-Zero
+subplot(2,3,4);
+zplane(ztooot1_butter, ptooot1_butter);
+hold on;
+zplane(ztooot2_butter, ptooot2_butter);
+zplane(ztooot3_butter, ptooot3_butter);
+hold off;
+title({'Peta Pole-Zero Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Re(z)'); 
+ylabel('Im(z)');
+ylim([-1.5 1.5]);
+xlim([-1.5 1.5]);
+
+% Respons Frekuensi
+% Magnitudo
+subplot(2,3,2);
+plot(wtooot1_butter, 20*log10(abs(Htooot1_butter)), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wtooot2_butter, 20*log10(abs(Htooot2_butter)), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wtooot3_butter, 20*log10(abs(Htooot3_butter)), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Magnitudo Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 2250]); 
+
+subplot(2,3,5);
+plot(w, 20*log10(abs(Htooot_butter)), 'k', 'LineWidth', 1.5);
+title('Respons Magnitudo Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 2250]); 
+
+% Fasa
+subplot(2,3,3);
+plot(wtooot1_butter, angle(Htooot1_butter), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wtooot2_butter, angle(Htooot2_butter), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wtooot3_butter, angle(Htooot3_butter), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Fasa Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 2250]); 
+
+subplot(2,3,6);
+plot(w, angle(Htooot_butter), 'k', 'LineWidth', 1.5);
+title('Respons Fasa Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 2250]); 
+
+% Filter Cheby1 Built-In
+figure('Color', 'w', 'Name', '1c. Filter - Sinyal "tooot" - Cheby1 Built-In');
+disp(" ");
+disp("Representasi Sistem Filter Cheby1 Built-In");
+
+% Respons Impuls
+subplot(2,3,1);
+plot(htooot1_cheby1, 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(htooot2_cheby1, 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(htooot3_cheby1, 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Impuls Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Sampel (n)'); 
+ylabel('Amplitudo Respons Impuls [h(n)]');
+
+% LCCDE
+fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot1_cheby1)
+        val_a = -atooot1_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot1_cheby1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot1_cheby1(k));
+    else
+        sign_char = '+'; 
+        if btooot1_cheby1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot1_cheby1(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter Cheby1 Built-In Frekuensi Harmonik 1\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot2_cheby1)
+        val_a = -atooot2_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot2_cheby1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot2_cheby1(k));
+    else
+        sign_char = '+'; 
+        if btooot2_cheby1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot2_cheby1(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter Cheby1 Built-In Frekuensi Harmonik 2\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot3_cheby1)
+        val_a = -atooot3_cheby1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot3_cheby1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot3_cheby1(k));
+    else
+        sign_char = '+'; 
+        if btooot3_cheby1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot3_cheby1(k), k-1);
+    end
+end
+
+disp(" ");
+
+% Peta Pole-Zero
+subplot(2,3,4);
+zplane(ztooot1_cheby1, ptooot1_cheby1);
+hold on;
+zplane(ztooot2_cheby1, ptooot2_cheby1);
+zplane(ztooot3_cheby1, ptooot3_cheby1);
+hold off;
+title({'Peta Pole-Zero Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Re(z)'); 
+ylabel('Im(z)');
+ylim([-1.5 1.5]);
+xlim([-1.5 1.5]);
+
+% Respons Frekuensi
+% Magnitudo
+subplot(2,3,2);
+plot(wtooot1_cheby1, 20*log10(abs(Htooot1_cheby1)), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wtooot2_cheby1, 20*log10(abs(Htooot2_cheby1)), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wtooot3_cheby1, 20*log10(abs(Htooot3_cheby1)), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Magnitudo Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 2250]); 
+
+subplot(2,3,5);
+plot(w, 20*log10(abs(Htooot_cheby1)), 'k', 'LineWidth', 1.5);
+title('Respons Magnitudo Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 2250]); 
+
+% Fasa
+subplot(2,3,3);
+plot(wtooot1_cheby1, angle(Htooot1_cheby1), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wtooot2_cheby1, angle(Htooot2_cheby1), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wtooot3_cheby1, angle(Htooot3_cheby1), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Fasa Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 2250]); 
+
+subplot(2,3,6);
+plot(w, angle(Htooot_cheby1), 'k', 'LineWidth', 1.5);
+title('Respons Fasa Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 2250]); 
+
+% Filter FIR1 Built-In
+figure('Color', 'w', 'Name', '1c. Filter - Sinyal "tooot" - FIR1 Built-In');
+disp(" ");
+disp("Representasi Sistem Filter FIR1 Built-In");
+
+% Respons Impuls
+subplot(2,3,1);
+plot(htooot1_fir1, 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(htooot2_fir1, 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(htooot3_fir1, 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Impuls Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Sampel (n)'); 
+ylabel('Amplitudo Respons Impuls [h(n)]');
+
+% LCCDE
+fprintf('Persamaan LCCDE Filter Frekuensi Fundamental\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot1_fir1)
+        val_a = -atooot1_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot1_fir1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot1_fir1(k));
+    else
+        sign_char = '+'; 
+        if btooot1_fir1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot1_fir1(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter FIR1 Built-In Frekuensi Harmonik 1\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot2_fir1)
+        val_a = -atooot2_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot2_fir1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot2_fir1(k));
+    else
+        sign_char = '+'; 
+        if btooot2_fir1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot2_fir1(k), k-1);
+    end
+end
+
+disp(" ");
+
+fprintf('Persamaan LCCDE Filter FIR1 Built-In Frekuensi Harmonik 2\n');
+fprintf('y(n) = ');
+for k = 2:length(atooot3_fir1)
+        val_a = -atooot3_fir1(k); % Dibalik tandanya karena pindah ruas ke kanan
+        fprintf('+ (%.4g)y[n-%d] ', val_a, k-1);
+end
+for k = 1:length(btooot3_fir1)
+    if k == 1
+        fprintf('%s(%.4g)x[n] ', btooot3_fir1(k));
+    else
+        sign_char = '+'; 
+        if btooot3_fir1(k) < 0
+            sign_char = ''; 
+        end
+        fprintf('%s(%.4g)x[n-%d] ', sign_char, btooot3_fir1(k), k-1);
+    end
+end
+
+disp(" ");
+
+% Peta Pole-Zero
+subplot(2,3,4);
+zplane(ztooot1_fir1, ptooot1_fir1);
+hold on;
+zplane(ztooot2_fir1, ptooot2_fir1);
+zplane(ztooot3_fir1, ptooot3_fir1);
+hold off;
+title({'Peta Pole-Zero Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Re(z)'); 
+ylabel('Im(z)');
+ylim([-1.5 1.5]);
+xlim([-1.5 1.5]);
+
+% Respons Frekuensi
+% Magnitudo
+subplot(2,3,2);
+plot(wtooot1_fir1, 20*log10(abs(Htooot1_fir1)), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wtooot2_fir1, 20*log10(abs(Htooot2_fir1)), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wtooot3_fir1, 20*log10(abs(Htooot3_fir1)), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Magnitudo Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 2250]); 
+
+subplot(2,3,5);
+plot(w, 20*log10(abs(Htooot_fir1)), 'k', 'LineWidth', 1.5);
+title('Respons Magnitudo Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Magnitudo (dB)');
+xlim([0 2250]); 
+
+% Fasa
+subplot(2,3,3);
+plot(wtooot1_fir1, angle(Htooot1_fir1), 'Color', [0.85, 0.1, 0.1], 'LineWidth', 1.5);
+hold on;
+plot(wtooot2_fir1, angle(Htooot2_fir1), 'Color', [0, 0.4, 0.8], 'LineWidth', 1.5);
+plot(wtooot3_fir1, angle(Htooot3_fir1), 'Color', [0.1, 0.6, 0.2], 'LineWidth', 1.5);
+hold off;
+legend('Filter Fundamental', 'Filter Harmonik 1', 'Filter Harmonik 2', 'Location','southeast');
+title({'Respons Fasa Filter Fundamental', ', Harmonik 1, dan Harmonik 2'});
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 2250]); 
+
+subplot(2,3,6);
+plot(w, angle(Htooot_fir1), 'k', 'LineWidth', 1.5);
+title('Respons Fasa Filter Total');
+xlabel('Frekuensi (Hz)'); 
+ylabel('Fasa (rad)');
+xlim([0 2250]); 
