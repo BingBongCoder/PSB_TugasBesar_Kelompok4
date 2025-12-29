@@ -2489,6 +2489,9 @@ grid on;
 
 %% SOAL 1c
 
+disp(" ");
+disp("SOAL 1c");
+
 % Desain Filter Built-In Sinyal "teeet"
 
 disp(" ");
