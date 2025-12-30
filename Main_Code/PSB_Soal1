@@ -1,4 +1,16 @@
 % TUGAS BESAR PSB SOAL 1
+
+% File Matlab ini membutuhkan File Audio 'kereta.aac' di dalam folder
+% yang sama dengan file kode PSB_Soal1.m
+
+% Ketika kode ini dijalankan, banyak figure akan dihasilkan untuk menjadi
+% bahan analisis untuk menjawab soal 1a hingga 1d sehingga kode Matlab 
+% yang digunakan oleh kelompok kami hanyalah satu, yaitu file ini
+% PSB_Soal1.m
+
+% Selain dari menghasilkan figure, 8 file audio mp3 akan dihasilkan dalam
+% folder yang sama dengan file kode PSB_Soal1.m
+
 clear;
 clc;
 close all;
@@ -2849,12 +2861,17 @@ z_teeet2 = [];
 p_teeet3 = [];
 z_teeet3 = [];
 
-p_teeet1 = [p_teeet1; list_p_teeet1];
-z_teeet1 = [z_teeet1; list_z];
-p_teeet2 = [p_teeet2; list_p_teeet2];
-z_teeet2 = [z_teeet2; list_z];
-p_teeet3 = [p_teeet3; list_p_teeet3];
-z_teeet3 = [z_teeet3; list_z];
+for i = 1:3
+    p_teeet1 = [p_teeet1; list_p_teeet1(:)];
+    z_teeet1 = [z_teeet1; list_z(:)];
+    p_teeet2 = [p_teeet2; list_p_teeet2(:)];
+    z_teeet2 = [z_teeet2; list_z(:)];
+    p_teeet3 = [p_teeet3; list_p_teeet3(:)];
+    z_teeet3 = [z_teeet3; list_z(:)];
+end
+
+zall_teeet = [z_teeet1(:); z_teeet2(:); z_teeet3(:)];
+pall_teeet = [p_teeet1(:); p_teeet2(:); p_teeet3(:)];
 
 % Konstanta LCCDE untuk Filter Peletakkan Pole-Zero Sederhana
 k = 1;
@@ -3555,11 +3572,7 @@ disp(" ");
 
 % Peta Pole-Zero
 subplot(2,3,4);
-zplane(z_teeet1, p_teeet1');
-hold on;
-zplane(z_teeet2, p_teeet2');
-zplane(z_teeet3, p_teeet3');
-hold off;
+zplane(zall_teeet, pall_teeet);
 title({'Peta Pole-Zero Filter Fundamental, Harmonik 1, dan Harmonik 2'});
 xlabel('Re(z)'); 
 ylabel('Im(z)');
@@ -3677,12 +3690,17 @@ z_tooot2 = [];
 p_tooot3 = [];
 z_tooot3 = [];
 
-p_tooot1 = [p_tooot1; list_p_tooot1];
-z_tooot1 = [z_tooot1; list_z];
-p_tooot2 = [p_tooot2; list_p_tooot2];
-z_tooot2 = [z_tooot2; list_z];
-p_tooot3 = [p_tooot3; list_p_tooot3];
-z_tooot3 = [z_tooot3; list_z];
+for i = 1:3
+    p_tooot1 = [p_tooot1; list_p_tooot1(:)];
+    z_tooot1 = [z_tooot1; list_z(:)];
+    p_tooot2 = [p_tooot2; list_p_tooot2(:)];
+    z_tooot2 = [z_tooot2; list_z(:)];
+    p_tooot3 = [p_tooot3; list_p_tooot3(:)];
+    z_tooot3 = [z_tooot3; list_z(:)];
+end
+
+zall_tooot = [z_tooot1(:); z_tooot2(:); z_tooot3(:)];
+pall_tooot = [p_tooot1(:); p_tooot2(:); p_tooot3(:)];
 
 % Konstanta LCCDE untuk Filter Peletakkan Manual Pole-Zero Sederhana
 k = 1;
@@ -4382,11 +4400,7 @@ disp(" ");
 
 % Peta Pole-Zero
 subplot(2,3,4);
-zplane(z_tooot1, p_tooot1');
-hold on;
-zplane(z_tooot2, p_tooot2');
-zplane(z_tooot3, p_tooot3');
-hold off;
+zplane(zall_tooot(:), pall_tooot(:));
 title({'Peta Pole-Zero Filter Fundamental, Harmonik 1, dan Harmonik 2'});
 xlabel('Re(z)'); 
 ylabel('Im(z)');
